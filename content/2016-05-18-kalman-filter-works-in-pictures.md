@@ -53,15 +53,17 @@ TeX: { equationNumbers: { autoNumber: "AMS" } }
 Google一下卡尔曼滤波器，搜索到的大部分文章用到的数学知识都看起来晦涩难懂，让人望而却步. 事实上如果你从正确的角度看待它，就会发现卡尔曼滤波器其实超级简单易懂,这使它成为一个很好的文章主题.我将以许多清晰、漂亮的图片以及各色符号来阐述之. 理解本文你仅需的前置知识是懂一些概率论和矩阵. 
 
 
-我们先从一个不太严谨的例子开始. 但如果你想直奔主题到漂亮的图片和数学公式，请[跳到这里继续阅读](#jump). 
+我们先从一个不太严谨的例子开始. 如果你想直奔主题到漂亮的图片和数学公式，请[跳到这里继续阅读](#jump). 
 
 # 卡尔曼滤波器能干什么？
 
 我们假定这样一个例子：你组装了一个能在树林中漫步的小机器人，它必须知道自身的确切位置，从而能自主行驶. 
 
-<div style="text-align:center">
+<!--div style="text-align:center">
 <img src="../images/robot_forest-300x160.png" alt="Your little robot" />
-</div>
+</div-->
+
+![Your little robot](/images/robot_forest-300x160.png){.center .shadow}
 
 我们可以说这个机器人有一个状态向量$\vec{x_k}$，包含位置和速度：
 

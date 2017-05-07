@@ -433,7 +433,7 @@ MulticopterAttitudeControl::control_attitude(float dt)
 
 至此, 已完全计算得出姿态轴角度误差, 接下来根据此误差计算出目标角速率.
 
-{% highlight c++ %}
+```c++
 	/* calculate angular rates setpoint */
 	_rates_sp = _params.att_p.emult(e_R);
 
