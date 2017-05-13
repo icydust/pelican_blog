@@ -1,15 +1,13 @@
-Date: 2016-07-02
 Title: Pixhawk多旋翼姿态控制算法解析
-Tags: Pixhawk, attitude Control
+Date: 2016-07-02
+Modified: 2017-05-07
+Category: 学习总结
+Tags: Pixhawk, 控制算法
 Slug: Pixhawk_attitude_control
+Summary: 本文介绍了飞行控制用到的一些基础数学知识，并结合Pixhawk源代码详细解析了其多旋翼姿态控制算法。
 
 
----
-layout: post
-title:  "Pixhawk多旋翼姿态控制算法解析"
-date:   2016-07-02 10:43:16 +0000
-categories: essay
----
+
 
 <script type="text/x-mathjax-config">
 MathJax.Hub.Config({
@@ -83,7 +81,8 @@ TeX: { equationNumbers: { autoNumber: "AMS" } }
 我们将先以简单的二维旋转为例对上述两种意义逐一阐述，三维空间旋转矩阵不过多了一个维度，其意义相同. 
 
 * 第一种表示意义：旋转向量
-<center><img src="../images/pixhawk_control_law/01RotationMatrix_1000.gif" alt = "RotationMatrix" /></center>
+
+<center><img src="/images/pixhawk_control_law/01RotationMatrix_1000.gif" alt = "RotationMatrix" /></center>
 
 平面上的每一点 ${\displaystyle P}$都有一个坐标 ${\displaystyle P(x,y)}$，并对应着一个向量${\displaystyle (x,y)}$. 所有普通意义上的平面向量组成了一个空间，记作ℝ²，因为每个向量都可以表示为两个实数构成的有序数组${\displaystyle (x,y)}$. 在向量空间ℝ²，将固定坐标系内的给定向量$\mathbf{v_0}$(本例中为$(1,0)^T$)绕逆时针旋转$\theta$至$\mathbf{v’}$(本例中为$(\cos\theta, \sin\theta)^T$), 可表示如下：
 
@@ -93,7 +92,7 @@ $$\mathbf{v’} = \mathbf{R_\theta}\mathbf{v_0}$$
 
 $$\mathbf{R_\theta} =
 {\begin{bmatrix}
-\cos\theta & -\sin\theta \\\\
+\cos\theta & -\sin\theta \\
 \sin\theta & \cos\theta
 \end{bmatrix}}
 $$
@@ -102,7 +101,7 @@ $$
 
 $$\mathbf{R'_\theta} =
 {\begin{bmatrix}
-\cos\theta & \sin\theta \\\\
+\cos\theta & \sin\theta \\
 -\sin\theta & \cos\theta
 \end{bmatrix}}
 $$-->
@@ -112,7 +111,7 @@ $$-->
 本文着重讨论此种惯例表示，因为在飞机姿态控制中会用到多个坐标系:大地坐标系(惯性系)，机体坐标系(非惯性系)...等, 我们需要知道同一向量(速度, 加速度,角速度等)在这些坐标系之间的转换关系, 理解此种表示法的意义非常重要. 
 
 仍从最简单的二维旋转开始，如下图所示：
-<center><img src="../images/pixhawk_control_law/02RotationMatrixAxes_1000.gif" alt = "RotationMatrixAxes" /></center>
+<center><img src="/images/pixhawk_control_law/02RotationMatrixAxes_1000.gif" alt = "RotationMatrixAxes" /></center>
 
 旋转矩阵可以表示不同坐标系下同一向量的坐标之间的关系. 以上图为例: $\mathbf{v_0}=(1,0)^T$及$\mathbf{v’}=(\cos\theta, -\sin\theta)^T$分别是向量**V**在坐标系OX<sub>0</sub>Y<sub>0</sub>及OX'Y'中的向量坐标，则有:
 
@@ -120,7 +119,7 @@ $$\mathbf{v_0} = \mathbf{R_\theta}\mathbf{v'}$$
 
 $$\mathbf{R_\theta} =
 {\begin{bmatrix}
-\cos\theta & -\sin\theta \\\\
+\cos\theta & -\sin\theta \\
 \sin\theta & \cos\theta
 \end{bmatrix}}$$
 
@@ -131,16 +130,16 @@ $$\mathbf{R_\theta} =
 三维旋转较二维旋转复杂得多. 在三维空间内，以大地坐标系和飞机机体坐标系间的旋转关系为例，设大地坐标系为Oxyz, 机体坐标系为OXYZ（坐标系方向约定见[1.2.1节](#1.2.1)）, 设**i, j, k**为大地坐标系内x,y,z轴的单位向量. **I, J, K**为机体坐标系内X, Y, Z轴的单位向量，向量V在大地坐标系和机体坐标系内的坐标分别为$\mathbf{v^G}$,$\mathbf{v^B}$, 则此两向量的关系如下：
 
 $$\begin{equation}\mathbf{v^G} = \begin{bmatrix}
-\mathbf{v_x^G}  \\\\
-\mathbf{v_y^G}  \\\\
+\mathbf{v_x^G}  \\
+\mathbf{v_y^G}  \\
 \mathbf{v_z^G}
 \end{bmatrix} = \begin{bmatrix}
-\mathbf{i}\cdot\mathbf{I} & \mathbf{i}\cdot\mathbf{J} & \mathbf{i}\cdot\mathbf{K} \\\\
-\mathbf{j}\cdot\mathbf{I} & \mathbf{j}\cdot\mathbf{J} & \mathbf{j}\cdot\mathbf{K} \\\\
+\mathbf{i}\cdot\mathbf{I} & \mathbf{i}\cdot\mathbf{J} & \mathbf{i}\cdot\mathbf{K} \\
+\mathbf{j}\cdot\mathbf{I} & \mathbf{j}\cdot\mathbf{J} & \mathbf{j}\cdot\mathbf{K} \\
 \mathbf{k}\cdot\mathbf{I} & \mathbf{k}\cdot\mathbf{J} & \mathbf{k}\cdot\mathbf{K} 
 \end{bmatrix}\begin{bmatrix}
-\mathbf{v_x^B}  \\\\
-\mathbf{v_y^B}  \\\\
+\mathbf{v_x^B}  \\
+\mathbf{v_y^B}  \\
 \mathbf{v_z^B}
 \end{bmatrix} = 
 \mathbf{R_B^G}
@@ -154,8 +153,8 @@ $$\begin{equation}\mathbf{R_B^G} =
 \mathbf{I^G}  & \mathbf{J^G}  &\mathbf{K^G}
 \end{bmatrix} = 
 \begin{bmatrix}
-\mathbf{i^B}  \\\\
-\mathbf{j^B}  \\\\
+\mathbf{i^B}  \\
+\mathbf{j^B}  \\
 \mathbf{k^B}
 \end{bmatrix}\label{2eq}
 \end{equation}$$
@@ -179,7 +178,7 @@ Randal W. Beard & Timothy W. McLain _Small Unmanned Aircraft: Theory and Practic
 
 大地坐标系一般采用[NED(North east down)](https://en.wikipedia.org/wiki/North_east_down).   
 机体坐标系一般定义如下图所示, roll, pitch, yaw轴分别为X, Y, Z轴:
-<center><img src="../images/pixhawk_control_law/04AirplaneAxes.png" alt = "AirplaneAxes" /></center>
+<center><img src="/images/pixhawk_control_law/04AirplaneAxes.png" alt = "AirplaneAxes" /></center>
 坐标系方向和旋转方向遵从右手法则. 
 
 <h4 id="1.2.2">1.2.2 欧拉角表示</h4>
@@ -187,7 +186,7 @@ Randal W. Beard & Timothy W. McLain _Small Unmanned Aircraft: Theory and Practic
 以欧拉角表示旋转有多种约定，因为对于同一旋转**欧拉角与旋转次序密切相关**, [参考此处](https://zh.wikipedia.org/zh-cn/%E6%AC%A7%E6%8B%89%E8%A7%92#.E5.88.A5.E7.A8.AE.E9.A0.86.E5.BA.8F). 
 航空航天工程中常用[z-y′-x″顺规](https://en.wikipedia.org/wiki/Euler_angles#Tait.E2.80.93Bryan_angles)，如下图所示：
 
-<center><img src="../images/pixhawk_control_law/03Taitbrianzyx.png" alt = "Taitbrianzyx" /></center>
+<center><img src="/images/pixhawk_control_law/03Taitbrianzyx.png" alt = "Taitbrianzyx" /></center>
 从大地坐标系oxyz旋转到机体坐标系oXYZ的顺序为：
 
 * 绕oz旋转$\psi$;
@@ -200,7 +199,7 @@ $\psi$，$\theta$，$\phi$即分别为偏航，俯仰，滚转角(yaw, pitch, ro
 
 通过此三个角度可得出旋转矩阵：
 
-$$\begin{equation}\mathbf{R_B^G} = \begin{bmatrix} c(\psi)c(\theta) & c(\psi)s(\phi)s(\theta) - c(\phi)s(\psi) & s(\phi)s(\psi) + c(\phi)c(\psi)s(\theta) \\\\ c(\theta)s(\psi) & c(\phi)c(\psi) + s(\phi)s(\psi)s(\theta) & c(\phi)s(\psi)s(\theta) - c(\psi)s(\phi)\\\\ -s(\theta) & c(\theta)s(\phi) & c(\phi)c(\theta) \end{bmatrix}\label{3eqEulerAngles}
+$$\begin{equation}\mathbf{R_B^G} = \begin{bmatrix} c(\psi)c(\theta) & c(\psi)s(\phi)s(\theta) - c(\phi)s(\psi) & s(\phi)s(\psi) + c(\phi)c(\psi)s(\theta) \\ c(\theta)s(\psi) & c(\phi)c(\psi) + s(\phi)s(\psi)s(\theta) & c(\phi)s(\psi)s(\theta) - c(\psi)s(\phi)\\ -s(\theta) & c(\theta)s(\phi) & c(\phi)c(\theta) \end{bmatrix}\label{3eqEulerAngles}
 \end{equation}$$
 
 式中以$c(\alpha)$表示$\cos(\alpha)$, $s(\alpha)$表示$\sin(\alpha)$. 
@@ -215,7 +214,7 @@ http://www.chrobotics.com/library/understanding-euler-angles
 
 四元数通常可表示为$\mathbb{R}^4$内的一个向量：
 $$\mathbf{e} = \begin{pmatrix}
-e_0 \\\\ e_1 \\\\ e_2 \\\\ e_3 
+e_0 \\ e_1 \\ e_2 \\ e_3 
 \end{pmatrix}
 $$
 
@@ -225,9 +224,9 @@ $$
 $$e_0 = \cos\frac\Theta2$$
 
 $$\begin{pmatrix}
-e_1 \\\\ e_2 \\\\ e_3 
+e_1 \\ e_2 \\ e_3 
 \end{pmatrix} = \begin{pmatrix}
-u_x \\\\ u_y \\\\ u_z
+u_x \\ u_y \\ u_z
 \end{pmatrix}\sin\frac\Theta2
 $$
 
@@ -261,16 +260,16 @@ $$\begin{equation}\mathbf {R} = (\cos \Theta)\mathbf {I} +(\sin \Theta){\mathbf 
 
 上两式中矩阵${\mathbf {U}}$为向量$\mathbf{u}$的[叉积矩阵(cross product matrix)](https://en.wikipedia.org/wiki/Cross_product#Conversion_to_matrix_multiplication):
 
-$${\mathbf {U}}={\begin{bmatrix}0&-u_{z}&u_{y}\\\\
-u_{z}&0&-u_{x}\\\\
+$${\mathbf {U}}={\begin{bmatrix}0&-u_{z}&u_{y}\\
+u_{z}&0&-u_{x}\\
 -u_{y}&u_{x}&0
 \end{bmatrix}}$$
 
 
 $\mathbf {u} \otimes \mathbf {u}$为向量$\mathbf {u}$自身的张量积(也可认为是u的行向量与列向量之积):
 
-$$\mathbf {u} \otimes \mathbf {u} ={\begin{bmatrix}u_{x}^{2}&u_{x}u_{y}&u_{x}u_{z}\\\\
-u_{x}u_{y}&u_{y}^{2}&u_{y}u_{z}\\\\
+$$\mathbf {u} \otimes \mathbf {u} ={\begin{bmatrix}u_{x}^{2}&u_{x}u_{y}&u_{x}u_{z}\\
+u_{x}u_{y}&u_{y}^{2}&u_{y}u_{z}\\
 u_{x}u_{z}&u_{y}u_{z}&u_{z}^{2}\end{bmatrix}}$$
 
 
@@ -282,7 +281,7 @@ u_{x}u_{z}&u_{y}u_{z}&u_{z}^{2}\end{bmatrix}}$$
 各姿态轴的误差可通过旋转轴**单位**向量与旋转角度的乘积给出:
 
 $$\begin{equation}\mathbf{error} = \begin{pmatrix}
-u_x \\\\ u_y \\\\ u_z
+u_x \\ u_y \\ u_z
 \end{pmatrix}\Theta
 \label{6eqerror}
 \end{equation}$$
@@ -297,13 +296,13 @@ u_x \\\\ u_y \\\\ u_z
 <h3 id="2.1">2.1 Pixhawk飞控系统框图</h3>
 
 Pixhawk飞控系统框图可表示如下：
-<center><img src="../images/pixhawk_control_law/2.1control_Arch.png" alt = "control_Arch" /></center>
+<center><img src="/images/pixhawk_control_law/2.1control_Arch.png" alt = "control_Arch" /></center>
 最内层为姿态控制环节，外层依次为位置和航路控制环节. 上图对于多旋翼，固定翼及垂直起降(VTOL)飞机均适用，不同构型飞机飞控的差别在于姿态(Attitude)和位置(Position)的估计(Estimator)和控制(Controller)模块会使用不同的算法，因此会使用不同的模块. 不同构型飞机使用姿态位置估计控制模块可[参考此处的表格](http://onewayout.github.io/pixhawk/2016/05/24/pixhawk-principle-and-customize.html#1.5). 
 
 <h3 id="2.2">2.2 Pixhawk姿态控制解析</h3>
 
 Pixhawk中多旋翼姿态控制模块对应的源文件为[Firmware/src/modules/mc_att_control/mc_att_control_main.cpp](https://github.com/PX4/Firmware/blob/master/src/modules/mc_att_control/mc_att_control_main.cpp). 其关键部分是角度误差控制及角速率误差控制，可表示如下图：
-<center><img src="../images/pixhawk_control_law/2.2attitude_controller.png" alt = "attitude_controller" /></center>
+<center><img src="/images/pixhawk_control_law/2.2attitude_controller.png" alt = "attitude_controller" /></center>
 角度误差控制和角速率误差控制分别对应于源文件中的`control_attitude(float dt)`和`control_attitude_rates(float dt)`函数.   
 此模块中油门(Thrust或Throttle)基本没作控制，以下不讨论. 
 
@@ -472,5 +471,5 @@ MulticopterAttitudeControl::control_attitude(float dt)
 
 <h4 id="2.2.2">2.2.2 角速率误差控制</h4>
 上节中我们已经得到目标角速率, 当前角速率可由姿态估计模块给出, 角速率误差控制环节的输入即为此两角速率. 输出为各姿态轴控制命令. 对照代码容易看出其控制框图如下, 此处不再列出源代码:
-<center><img src="../images/pixhawk_control_law/2.3control_rates.png" alt = "control_rates" /></center>
+<center><img src="/images/pixhawk_control_law/2.3control_rates.png" alt = "control_rates" /></center>
 此处需要注意除了<span style="color: Green;">前馈环节</span>以外, 图中<span style="color: Red;">PI控制器</span>以及<span style="color: Blue;">微分环节</span>并不是典型的PID控制器, 因为<span style="color: Blue;">此微分环节</span>的输入为当前角速率, 而非角速率误差. 可如此理解<span style="color: Blue;">此微分环节</span>的作用, 若当前角加速度过大, 应加以控制使其减小, 即对当前角速率进行微分负反馈. 

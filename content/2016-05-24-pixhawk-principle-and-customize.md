@@ -1,19 +1,10 @@
-Date: 2016-05-24
 Title: How to customize Pixhawk in your own project
-Tags: Pixhawk UAV
+Date: 2016-05-24
+Category: 学习总结
+Tags: Pixhawk, UAV
 Slug: customize_Pixhawk
-
-
----
-layout: post
-title:  "How to customize Pixhawk in your own project"
-date:   2016-05-24 20:52:16 +0200
-categories: pixhawk
----
-
-> 本文是在ISAE Supaero实习时，应老师要求所写。本来老师要求我对Pixhawk的理解写成文档或PPT,　因刚好在折腾博客，就放在这里了。
-> Pixhawk is an open-source autopilot platform. In this article, I explained the basic architecture of Pixhawk source code.
-> And how to customize it in your own project.
+Summary: 本文是在ISAE Supaero实习时，应老师要求所写。本来老师要求我对Pixhawk的理解写成文档或PPT,　因刚好在折腾博客，就放在这里了。
+Pixhawk is an open-source autopilot platform. In this article, I explained the basic architecture of Pixhawk source code. And how to customize it in your own project.
 
 * [0. Prerequisite](#0)
 
@@ -155,7 +146,7 @@ As you can see, the source code files are well organised. Though you still need 
 
 <h3 id="1.3">1.3 The boot process</h3>
 If you power on your Pixhawk board through USB cable or BEC, the LED will flash and the buzzer will play a special tune(you can check the tune meaning [here](http://ardupilot.org/copter/docs/common-sounds-pixhawkpx4.html)). But you may wander what exactly happen during this process. 
-<center><img src="../images/pixhawk/pixhawk_board.png" alt="pixhawk_board" width="219" height="337" /></center>
+<center><img src="/images/pixhawk/pixhawk_board.png" alt="pixhawk_board" width="219" height="337" /></center>
 
 When powering on the board, the bootloader will run first. Bootloader is like BIOS in your PC. And it's already in the board when you buy it. So you may never need to bother it. The bootloader will launch the Nuttx Operating System. After some initialization of the hardware, memory... the Nuttx will execute a script file called **"init.d/rcS"** in function `nsh_initscript()` of file `nsh_script.c`. You can check the script file folder in [section 1.2](#1.2)). This is a **very important** step. By executing this script file, some parameters in the EEPROM will be read, and the corresponding tasks related to these parameters will be launched. I will explain this in the next section.
 
@@ -245,11 +236,11 @@ I assume you have read through this file. So to summarize, the startup scripts a
 
 All the flight control tasks run in Nuttx system. They communicate with each other through uORB. uORB is a implementation of publish-subscribe pattern.
 
-<center><img src="../images/pixhawk/pixhawk_arch.png" alt="pixhawk_arch" /></center>
+<center><img src="/images/pixhawk/pixhawk_arch.png" alt="pixhawk_arch" /></center>
 
 <br>
 To control a vehicle, you need to navigate to waypoints, estimate the position and attitude, and control the position and attitude by using feedback control theory. That's the idea in pixhawk flight control architecture. 
-<center><img src="../images/pixhawk/pixhawk_feedbackcontrol.png" alt="pixhawk_arch" /></center>  
+<center><img src="/images/pixhawk/pixhawk_feedbackcontrol.png" alt="pixhawk_arch" /></center>  
 
 These flight control modules are in folder `Firmware/src/modules`. I list the  modules used by different airframes below. Actually you can find where they are launched in the startup scripts.
  

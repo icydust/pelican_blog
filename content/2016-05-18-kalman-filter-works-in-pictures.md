@@ -1,15 +1,12 @@
-Date: 2016-05-18
 Title: 图示卡尔曼滤波器原理(译文)
-Tags: 卡尔曼滤波器 Kalman Filter
+Date: 2016-05-18
+Category: 学习总结
+Tags: 卡尔曼滤波器, Kalman Filter
 Slug: Kalman_Filter
+Summary: 本译文结合大量直指核心概念的图片，深入浅出的解释了卡尔曼滤波器的基本原理。
 
 
----
-layout: post
-title:  ""
-date:   2016-05-18 22:38:16 +0200
-categories: jekyll update
----
+
  
 <script type="text/x-mathjax-config">
 MathJax.Hub.Config({
@@ -40,13 +37,13 @@ TeX: { equationNumbers: { autoNumber: "AMS" } }
 > 若你发现有任何不当之处请Email至：[cia120@163.com](mailto:cia120@163.com)
 >
 
-我将在本文介绍[卡尔曼滤波器](https://zh.wikipedia.org/wiki/卡尔曼滤波)，因为它在工程中有着广泛应用. 
+本文将介绍[卡尔曼滤波器](https://zh.wikipedia.org/wiki/卡尔曼滤波)，因其在工程中有着广泛应用. 
 
-令人遗憾的是貌似很少有软件工程师和科学家知道它。卡尔曼滤波器是一个特别通用和强大的**信息融合**工具，特别是出现不确定因素时. 其提取精确信息的能力曾一度看起来有些不可思议. 如果说我有些夸大其词，请看[我之前发的一个视频](http://www.bzarg.com/p/improving-imu-attitude-estimates-with-velocity-data)，这个视频中我演示了卡尔曼滤波器根据一个自由浮动的物体的*速度*得出其*方位*. 非常巧妙. 
+遗憾的是貌似很少有软件工程师和科学家对其了解。卡尔曼滤波器是一个特别通用和强大的**信息融合**工具，特别是出现不确定因素时. 其提取精确信息的能力曾一度看起来有些不可思议. 如果说我有些夸大其词，请看[我之前发的一个视频](http://www.bzarg.com/p/improving-imu-attitude-estimates-with-velocity-data)，这个视频中我演示了卡尔曼滤波器根据一个自由浮动的物体的*速度*得出其*方位*. 非常巧妙. 
 
 # 什么是卡尔曼滤波器?
 
-卡尔曼滤波器对于含**不确定信息**的动态系统都可适用，你可以对系统下一步的行为做一个**有根据的猜测**. 哪怕实际情况与你的猜测相去甚远，卡尔曼滤波器通常也能计算出实际发生了什么. 并且它能有效利用你可能不会想到的各种极端现象之间的联系. 
+卡尔曼滤波器对于含**不确定信息**的动态系统均可适用，你可以对系统下一步的行为做一个**有根据的猜测**. 哪怕实际情况与你的猜测相去甚远，卡尔曼滤波器通常也能计算出实际发生了什么. 并且它能有效利用你可能不会想到的各种极端现象之间的联系. 
 
 对于连续变化的系统，卡尔曼滤波器是十分理想的. 其优势是占用内存少（除了上一个状态，不需要存储其他历史数据），而且速度快，这些优势使其非常适用于实时问题和嵌入式系统. 
 
@@ -60,10 +57,10 @@ Google一下卡尔曼滤波器，搜索到的大部分文章用到的数学知�
 我们假定这样一个例子：你组装了一个能在树林中漫步的小机器人，它必须知道自身的确切位置，从而能自主行驶. 
 
 <!--div style="text-align:center">
-<img src="../images/robot_forest-300x160.png" alt="Your little robot" />
+<img src="/images/robot_forest-300x160.png" alt="Your little robot" />
 </div-->
 
-![Your little robot](/images/robot_forest-300x160.png){.center .shadow}
+![Your little robot](/images/robot_forest-300x160.png){.center}
 
 我们可以说这个机器人有一个状态向量$\vec{x_k}$，包含位置和速度：
 
@@ -72,7 +69,8 @@ $$\vec{x_k} = (\vec{p}, \vec{v})$$
 注意状态向量其实就是列出了关于系统组态的一些数字. 在我们的例子中就是位置和速度，根据你所研究的问题不同，它也可能是油箱中液体的体积，汽车引擎的温度，手指在触摸板上的位置等你所关注的任何东西. 
 
 我们的机器人有GPS传感器，其精度约10m，还不错. 但它还需更精确地知道自身位置，树林中遍地沟壑，就算有几十厘米的失误，机器人也可能跌入其中，所以仅靠GPS定位还是不够的. 
-<center><img src="../images/robot_ohnoes-300x283.png" alt="Oh no." /></center> 
+
+![Oh no.](/images/robot_ohnoes-300x283.png){.center}
 
 我们可能还能知道关于机器人移动的一些其他信息：发送给驱动轮电机的指令，若其行进方向无障碍，其下一个时刻可能就在这个方向稍远的位置. 当然关于其运动也有些未知因素：机器人可能被强风吹歪，其轮子可能打滑，或在崎岖的地形上翻滚. 因此轮子转动的距离不一定就代表了机器人行进的距离，预测也可能不准. 
 
@@ -92,30 +90,30 @@ GPS能得到关于状态一些东西，但并不直接，并带有不确定和�
 看一下我想阐释的问题，我们继续从这个仅有位置和速度的简单状态向量开始：
 
 $$\vec{x} = \begin{bmatrix}
-p\\\\
+p\\
 v
 \end{bmatrix}$$
 
 我们并不知道确切的位置和速度，只知道一些位置和速度的可能组合，但其中一些组合的可能性比其他的更大:
-<center><img src="../images/gauss_0.png" width="310" height="325"/></center> 
+<center><img src="/images/gauss_0.png" width="310" height="325"/></center> 
 
  
  
 卡尔曼滤波器假定这两个变量（在我们的例子中是位置和速度）是随机且[高斯分布](https://zh.wikipedia.org/wiki/正态分布)（即正态分布）. 每个变量有一个**平均值**$\mu$（也就是最可能的状态），以及[**方差(Variance)**](https://zh.wikipedia.org/wiki/方差)*$\sigma^2$*，方差表示不确定性:（`译注：下图中有一小错误，颜色标记的应为标准差，而非方差，否则单位不一致`）
-<center><img src="../images/gauss_1.png" width="310" height="276"/></center> 
+<center><img src="/images/gauss_1.png" width="310" height="276"/></center> 
 
 
 在上图中，位置和速度是**不相关**的，这意味着你无法从一个变量的状态知道另一个变量的任何信息. 
 
 下图显示了一个稍有趣的例子：位置和速度是**相关**的，观测到一个特定的位置的可能性取决于此时的速度. 
-<center><img src="../images/gauss_3.png" width="310" height="286"/></center> 
+<center><img src="/images/gauss_3.png" width="310" height="286"/></center> 
 
 当我们以当前位置来预测下一个位置时，这种相关的情况就可能发生. 如果速度较快，下一位置就会更远，反之亦然. 
 
 跟踪这种相关性非常重要，因为这给了我们**更多的信息**：对一个变量的测量值告诉我们其他变量的可能值. 这就是卡尔曼滤波器的目的，从一些不太确定的测量中尽量挤出更多有用的信息!
 
 这种相关性可以用[协方差矩阵(Covariance matrix)](https://zh.wikipedia.org/wiki/协方差矩阵)来量度. 简单来说，该矩阵中每个元素$\Sigma_{ij}$表示了第i个状态变量和第j个状态变量的相关性的程度. （你可能猜得到协方差矩阵是[对称阵](https://zh.wikipedia.org/wiki/對稱矩陣)，因为交换i,j的次序, 结果相同）. 协方差矩阵通常以符号“$\mathbf{\Sigma}$”表示，因此其每个元素可以“*$\Sigma_{ij}$”*表示.
-<center><img src="../images/gauss_2.png" width="310" height="286"/></center>
+<center><img src="/images/gauss_2.png" width="310" height="286"/></center>
 
 # 用矩阵描述我们的问题
 
@@ -124,13 +122,13 @@ v
 
 $$\begin{equation} \label{eq:statevars} \begin{aligned}\mathbf{\hat{x}}_k &= 
 \begin{bmatrix}
-\text{position}\\\\
+\text{position}\\
 \text{velocity}
-\end{bmatrix}\\\\
+\end{bmatrix}\\
 \mathbf{P}_k &=
 \begin{bmatrix}
-\Sigma_{pp} & \Sigma_{pv} \\\\
-\Sigma_{vp} & \Sigma_{vv} \\\\
+\Sigma_{pp} & \Sigma_{pv} \\
+\Sigma_{vp} & \Sigma_{vv} \\
 \end{bmatrix}
 \end{aligned}
 \end{equation}$$
@@ -139,16 +137,16 @@ $$\begin{equation} \label{eq:statevars} \begin{aligned}\mathbf{\hat{x}}_k &=
 (此处我们仅使用了位置和速度两个变量，在实际应用中状态向量可包含任意个变量，用来表示你所关心的任何信息). 
 
 接下来，我们很关心如何得到<span style="color: RoyalBlue;">当前状态</span>(<span style="color: RoyalBlue;">**k-1**</span>)和预测<span style="color: DeepPink;">下一状态</span>(<span style="color: DeepPink;">**k**</span>)，注意我们并不知道状态值是否真实，但是预测函数对此并不关心，它仅在所有状态可能性的基础上给出一个新的预测分布：
-<center><img src="../images/gauss_7.jpg" width="310" height="286"/></center>
+<center><img src="/images/gauss_7.jpg" width="310" height="286"/></center>
 当前状态向量到预测下一步的状态向量的转换可用矩阵$\mathbf{F_k}$表示：
-<center><img src="../images/gauss_8.jpg" width="310" height="286"/></center>
+<center><img src="/images/gauss_8.jpg" width="310" height="286"/></center>
 从上图可看出，每一个可能的向量$\color{royalblue}{\mathbf{X_{k-1}}}$（原始估计）都可通过矩阵$\mathbf{F_k}$转换到$\color{deeppink}{\mathbf{X_k}}$(预测值), 若原始估计值正确，则系统下一个时刻的状态很可能为预测值. 
 
 在我们这个机器人的小例子中，如何使用矩阵来预测下一时刻的位置和速度呢？使用基本的运动学公式：（这里认为两个时刻的速度近似不变）
 
 $$\begin{split}
 \color{deeppink}{p_k} &= \color{royalblue}{p_{k-1}} + \Delta t
-&\color{royalblue}{v_{k-1}} \\\\
+&\color{royalblue}{v_{k-1}} \\
 \color{deeppink}{v_k} &= &\color{royalblue}{v_{k-1}}
 \end{split}$$
 
@@ -156,10 +154,10 @@ $$\begin{split}
 
 $$\begin{align} \color{deeppink}{\mathbf{\hat{x}}k} &=
 \begin{bmatrix}
-1 & \Delta t \\\\
+1 & \Delta t \\
 0 & 1
 \end{bmatrix}
-\color{royalblue}{\mathbf{\hat{x}}} \\\\ &= \mathbf{F}k \color{royalblue}{\mathbf{\hat{x}}}\label{statevars} \end{align}$$
+\color{royalblue}{\mathbf{\hat{x}}} \\ &= \mathbf{F}k \color{royalblue}{\mathbf{\hat{x}}}\label{statevars} \end{align}$$
 
 现在我们得出了**预测矩阵**$\mathbf{F_k}$，能告诉下一个状态；但如何更新协方差矩阵仍未知. 
 
@@ -169,7 +167,7 @@ $$\begin{align} \color{deeppink}{\mathbf{\hat{x}}k} &=
 
 $$\begin{equation}
 \begin{split}
-Cov(x) &= \Sigma\\\\
+Cov(x) &= \Sigma\\
 Cov(\color{firebrick}{\mathbf{A}}x) &= \color{firebrick}{\mathbf{A}}\Sigma \color{firebrick}{\mathbf{A}}^T
 \end{split} \label{covident}
 \end{equation}$$
@@ -178,7 +176,7 @@ Cov(\color{firebrick}{\mathbf{A}}x) &= \color{firebrick}{\mathbf{A}}\Sigma \colo
 
 $$\begin{equation}
 \begin{split}
-\color{deeppink}{\mathbf{\hat{x}}_k} &= \mathbf{F}_k\color{royalblue}{\mathbf{\hat{x}}_{k-1}} \\\\
+\color{deeppink}{\mathbf{\hat{x}}_k} &= \mathbf{F}_k\color{royalblue}{\mathbf{\hat{x}}_{k-1}} \\
 \color{deeppink}{\mathbf{P}_k} &= \mathbf{F_k}\color{royalblue}{\mathbf{P}_{k-1}} \mathbf{F}_k^T
 \end{split}　\label{eq5}
 \end{equation}$$
@@ -194,7 +192,7 @@ $$\begin{equation}
 $$\begin{split}
 \color{deeppink}{p_k} &= \color{royalblue}{p_{k-1}} + {\Delta t}
 &\color{royalblue}{v_{k-1}} + &\frac{1}{2} \color{darkorange}{a}
-{\Delta t}^2 \\\\
+{\Delta t}^2 \\
 \color{deeppink}{v_k} &= &\color{royalblue}{v_{k-1}} + &\color{darkorange}{a} {\Delta t}
 \end{split}$$
 
@@ -203,9 +201,9 @@ $$\begin{split}
 $$\begin{equation}
 \begin{split}
 \color{deeppink}{\mathbf{\hat{x}}_k} &= \mathbf{F}_k\color{royalblue}{\mathbf{\hat{x}}_{k-1}} + \begin{bmatrix}
-\frac{\Delta t^2}{2} \\\\
+\frac{\Delta t^2}{2} \\
 \Delta t
-\end{bmatrix} \color{darkorange}{a} \\\\
+\end{bmatrix} \color{darkorange}{a} \\
 &= \mathbf{F}_k \color{royalblue}{\mathbf{\hat{x}}_{k-1}} +\mathbf{B}_k \color{darkorange}{\vec{\mathbf{u}_k}}
 \end{split} \label{eq6}
 \end{equation}$$
@@ -221,16 +219,16 @@ $\mathbf{B}_k$称之为**控制矩阵**，$\color{darkorange}{\vec{\mathbf{u}_k}
 但如果我们不知道这些力，怎么办？例如，强风的影响，轮子打滑，路面颠簸. 我们无法对这些全部考虑，而这些事情会导致我们的预测失灵. 
 
 通过给每一步预测添加表示不确定的量，我们可以给环境的这种不确定性建模：
-<center><img src="../images/gauss_9.jpg" width="310" height="286"/></center>
+<center><img src="/images/gauss_9.jpg" width="310" height="286"/></center>
 如上图所示，k-1时刻的估计值$\color{royalblue}{\mathbf{\hat{x}}_{k-1}}$经过预测步骤后，可能以协方差$\color{mediumaquamarine}{\mathbf{Q}_k}$移动至<span style="color: Purple;">紫色</span>高斯斑点（Gaussian blob）内某个位置，也可以说将未知的环境影响视为协方差为$\color{mediumaquamarine}{\mathbf{Q}_k}$的**噪音**. 
-<center><img src="../images/gauss_10a.jpg" width="310" height="310"/></center>
+<center><img src="/images/gauss_10a.jpg" width="310" height="310"/></center>
 这将产生一个新的高斯斑点，但有不同的协方差（相同的平均值）：
-<center><img src="../images/gauss_10b.jpg" width="310" height="310"/></center>
+<center><img src="/images/gauss_10b.jpg" width="310" height="310"/></center>
 简单地**加上**$\color{mediumaquamarine}{\mathbf{Q}_k}$，能得到**预测步骤**的完整表达式：
 
 $$\begin{equation}
 \begin{split}
-\color{deeppink}{\mathbf{\hat{x}}_k} &= \mathbf{F}_k\color{royalblue}{\mathbf{\hat{x}}_{k-1}} + \mathbf{B}_k\color{darkorange}{\vec{\mathbf{u}_k}} \\\\
+\color{deeppink}{\mathbf{\hat{x}}_k} &= \mathbf{F}_k\color{royalblue}{\mathbf{\hat{x}}_{k-1}} + \mathbf{B}_k\color{darkorange}{\vec{\mathbf{u}_k}} \\
 \color{deeppink}{\mathbf{P}_k} &= \mathbf{F_k}\color{royalblue}{\mathbf{P}_{k-1}} \mathbf{F}_k^T +\color{mediumaquamarine}{\mathbf{Q}_k}
 \end{split}
 \label{kalpredictfull}
@@ -245,28 +243,28 @@ $$\begin{equation}
 # 利用测量改善估计
 
 我们可能有一些能给出系统状态信息的传感器. 目前它们能测什么没什么关系，可能有的传感器能测位置，有的能测速度. 每个传感器能**间接地（indirect）**给出状态的某些信息，也就是说，传感器对系统状态进行某种操作，从而给出**读数**. 
-<center><img src="../images/gauss_12.jpg" width="621" height="286"/></center>
+<center><img src="/images/gauss_12.jpg" width="621" height="286"/></center>
 
 注意到传感器读数的单位和比例与我们所关心的系统状态的单位比例可能不同，你可能猜得到，我们以矩阵$\mathbf{H}_k$给传感器这种行为建模. 
-<center><img src="../images/gauss_13.jpg" width="621" height="286"/></center>
+<center><img src="/images/gauss_13.jpg" width="621" height="286"/></center>
 我们可以弄明白传感器读数的分布：
 
 $$\begin{equation}
 \begin{aligned}
-\vec{\mu}_{\text{expected}} &= \mathbf{H}_k\color{deeppink}{\mathbf{\hat{x}}_k} \\\\
+\vec{\mu}_{\text{expected}} &= \mathbf{H}_k\color{deeppink}{\mathbf{\hat{x}}_k} \\
 \mathbf{\Sigma}_{\text{expected}} &= \mathbf{H}_k\color{deeppink}{\mathbf{P}_k} \mathbf{H}_k^T
 \end{aligned}
 \end{equation}$$
 
 卡尔曼滤波器很棒的一点就是能处理传感器噪音. 噪音是指传感器总是有一些不可靠之处，原始估计中的每个状态会产生一系列可能的读数. 
-<center><img src="../images/gauss_14.jpg" width="621" height="286"/></center>
+<center><img src="/images/gauss_14.jpg" width="621" height="286"/></center>
 
 根据观测到的每个读数，我们可以猜测系统处于某个特定的状态. 但由于有一些不确定性，一些状态比其他状态更具可能性，这些更具可能性的状态就产生了我们看到的读数:
-<center><img src="../images/gauss_11.jpg" width="310" height="286"/></center>
+<center><img src="/images/gauss_11.jpg" width="310" height="286"/></center>
 我们将此不确定性(例如传感器噪音)的**协方差**称为$\color{mediumaquamarine}{\mathbf{R}_k}$，此分布的**均值**就是我们观测到的读数$\color{yellowgreen}{\vec{\mathbf{z}_k}}$. 
 
 现在我们有两个高斯斑点，一个的中心是预测的转换（$\mathbf{H}_k\color{deeppink}{\mathbf{\hat{x}}_k}$）后的均值，另一个的中心是传感器读数($\color{yellowgreen}{\vec{\mathbf{z}_k}}$). 
-<center><img src="../images/gauss_4.jpg" width="310" height="286"/></center>	
+<center><img src="/images/gauss_4.jpg" width="310" height="286"/></center>	
 
 对于系统状态现在可以从两个途径猜测，一个是基于从<span style="color: DeepPink;">**上一状态的预测**</span>（式$\eqref{kalpredictfull}$），另一个是根据**传感器读数**，我们必须兼顾调和这两个猜测. 
 
@@ -274,10 +272,10 @@ $$\begin{equation}
 那么最有可能的新系统状态是什么？对于我们看到的读数$(z_1,z_2)$，实际上有两种相关的可能性：<span style="color: YellowGreen;">（1）</span>传感器读数$\color{yellowgreen}{\vec{\mathbf{z}_k}}$测出了$(z_1,z_2)$的值，<span style="color: DeepPink;">（2）</span>从上一步估计推测出此时系统的状态，此估计产生了我们看到的读数. 
 
 如果有这两种可能性，而我们想知道这两种都正确的几率，只需要将其相乘：
-<center><img src="../images/gauss_6a.png" width="310" height="286"/></center>
+<center><img src="/images/gauss_6a.png" width="310" height="286"/></center>
 
 **重叠的区域**最具可能性. 这比任何单独一种的预测精确得多. 此分布的均值就是上述两种估计都最具可能性的值，因而也就是在所有给定信息基础上的**最佳猜测**. 这看起来很像另外一个高斯分布. 
-<center><img src="../images/gauss_6.png" width="310" height="286"/></center>
+<center><img src="/images/gauss_6.png" width="310" height="286"/></center>
 事实证明，若将两个具有不同均值和协方差矩阵的高斯分布相乘，会得到一个具有新均值及新协方差矩阵的高斯分布. 下文将讲述此转换过程中各高斯分布参数间关系. 
 
 # 组合高斯分布
@@ -294,12 +292,12 @@ $$\begin{equation} \label{gaussequiv}
 \end{equation}$$
 
 我们想知道将两个高斯分布相乘会得到什么？
-<center><img src="../images/gauss_joint.png" width="589" height="381"/></center>
+<center><img src="/images/gauss_joint.png" width="589" height="381"/></center>
 将$\eqref{gaussformula}$式代入$\eqref{gaussequiv}$式并进行一些代数运算（注意需对新的分布作归一化处理，以使其总概率为1），可以得到：
 
 $$\begin{equation} \label{fusionformula}
 \begin{aligned}
-\color{royalblue}{\mu’} &= \mu_0 + \frac{\sigma_0^2 (\mu_1 –\mu_0)} {\sigma_0^2 + \sigma_1^2}\\\\
+\color{royalblue}{\mu’} &= \mu_0 + \frac{\sigma_0^2 (\mu_1 –\mu_0)} {\sigma_0^2 + \sigma_1^2}\\
 \color{mediumblue}{\sigma’}^2 &= \sigma_0^2 –\frac{\sigma_0^4} {\sigma_0^2 + \sigma_1^2}
 \end{aligned}
 \end{equation}$$
@@ -313,7 +311,7 @@ $$\begin{equation} \label{gainformula}
 $$\begin{equation}
 \begin{split}
 \color{royalblue}{\mu’} &= \mu_0 + &\color{purple}{\mathbf{k}}
-(\mu_1 – \mu_0)\\\\
+(\mu_1 – \mu_0)\\
 \color{mediumblue}{\sigma’}^2 &= \sigma_0^2 –
 &\color{purple}{\mathbf{k}} \sigma_0^2
 \end{split} \label{update}
@@ -332,7 +330,7 @@ $$\begin{equation} \label{matrixgain}
 $$\begin{equation}
 \begin{split}
 \color{royalblue}{\vec{\mu}’} &= \vec{\mu_0} +
-&\color{purple}{\mathbf{K}} (\vec{\mu_1} – \vec{\mu_0})\\\\
+&\color{purple}{\mathbf{K}} (\vec{\mu_1} – \vec{\mu_0})\\
 \color{mediumblue}{\Sigma’} &= \Sigma_0 –
 &\color{purple}{\mathbf{K}} \Sigma_0
 \end{split} \label{matrixupdate}
@@ -350,7 +348,7 @@ $$\begin{equation}
 
 $$\begin{equation}
 \begin{aligned}
-\mathbf{H}_k \color{royalblue}{\mathbf{\hat{x}}_k’} &=\color{fuchsia}{\mathbf{H}_k \mathbf{\hat{x}}_k} & + &\color{purple}{\mathbf{K}} (\color{yellowgreen}{\vec{\mathbf{z}_k}} –\color{fuchsia}{\mathbf{H}_k \mathbf{\hat{x}}_k} ) \\\\
+\mathbf{H}_k \color{royalblue}{\mathbf{\hat{x}}_k’} &=\color{fuchsia}{\mathbf{H}_k \mathbf{\hat{x}}_k} & + &\color{purple}{\mathbf{K}} (\color{yellowgreen}{\vec{\mathbf{z}_k}} –\color{fuchsia}{\mathbf{H}_k \mathbf{\hat{x}}_k} ) \\
 \mathbf{H}_k \color{royalblue}{\mathbf{P}_k’} \mathbf{H}_k^T &=\color{deeppink}{\mathbf{H}_k \mathbf{P}_k \mathbf{H}_k^T} & – &\color{purple}{\mathbf{K}} \color{deeppink}{\mathbf{H}_k\mathbf{P}_k \mathbf{H}_k^T}
 \end{aligned} \label {kalunsimplified}
 \end{equation}$$
@@ -365,7 +363,7 @@ $$\begin{equation} \label{eq:kalgainunsimplified}
 
 $$\begin{equation}
 \begin{split}
-\color{royalblue}{\mathbf{\hat{x}}_k’} &=\color{fuchsia}{\mathbf{\hat{x}}_k} & + &\color{purple}{\mathbf{K}’} (\color{yellowgreen}{\vec{\mathbf{z}_k}} –\color{fuchsia}{\mathbf{H}_k \mathbf{\hat{x}}_k} ) \\\\
+\color{royalblue}{\mathbf{\hat{x}}_k’} &=\color{fuchsia}{\mathbf{\hat{x}}_k} & + &\color{purple}{\mathbf{K}’} (\color{yellowgreen}{\vec{\mathbf{z}_k}} –\color{fuchsia}{\mathbf{H}_k \mathbf{\hat{x}}_k} ) \\
 \color{royalblue}{\mathbf{P}_k’} &= \color{deeppink}{\mathbf{P}_k}
 & – & \color{purple}{\mathbf{K}’} \color{deeppink}{\mathbf{H}_k\mathbf{P}_k}
 \end{split}
@@ -380,7 +378,7 @@ $$\begin{equation}
 这就是**更新步骤**的完整方程.
 $\color{royalblue}{\mathbf{\hat{x}}_k’}$是新的最佳估计，我们可以持续将此值以及$\color{royalblue}{\mathbf{P}_k’}$反馈给新的一轮又一轮的**更新**与**预测**. 
 
-<center><img src="../images/kalflow.png" width="850" height="1100"/></center>
+<center><img src="/images/kalflow.png" style="zoom:80%"/></center>
 
 # 小结
 

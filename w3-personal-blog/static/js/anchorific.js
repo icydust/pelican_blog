@@ -70,7 +70,7 @@ if ( typeof Object.create !== 'function' ) {
             if ( self.opt.navigation ) {
                 $( self.opt.navigation ).append( ''
                     + '<ul class="tree">'
-                    +   '<li><strong>Cодержание:</strong></li>'
+                    +   '<li><strong>目录:</strong></li>'
                     + '</ul>'
                 );
                 self.previous = $( self.opt.navigation ).find( 'ul' ).last();

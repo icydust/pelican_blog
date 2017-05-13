@@ -1,15 +1,9 @@
-Date: 2016-05-29
 Title: 这个世界还在更糟
-Tags: 测试
+Date: 2016-05-29
+Category: 观点感想
+Tags: 
 Slug: This_world
 
-
----
-layout: post
-title:  "这个世界还在更糟"
-date:   2016-05-29 12:12:16 +0200
-categories: essay
----
 
 看到一个关于设计大师`山本耀司`的视频，感觉一下击中了内心。
 

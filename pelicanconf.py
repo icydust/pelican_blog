@@ -35,7 +35,7 @@ FEED_DOMAIN = SITEURL
 
 # Blogroll
 LINKS = (
-    ('Pelican', 'http://getpelican.com/'),
+    ('Pixhawk', 'http://dev.px4.io/'),
     ('Python.org', 'http://python.org/'),
     ('Jinja2', 'http://jinja.pocoo.org/'),
     # ('You can modify those links in your config file', '#'),
@@ -81,6 +81,18 @@ CATEGORY_SAVE_AS = u'category/{slug}.html'
 # tag
 TAG_URL = u'tag/{slug}/'
 TAG_SAVE_AS = u'tag/{slug}/index.html'
+
+
+MARKDOWN = {
+    'extension_configs': {
+        'markdown.extensions.codehilite': {'css_class': 'highlight'},
+        'markdown.extensions.extra': {},
+        'markdown.extensions.meta': {},
+        'markdown.extensions.mathjax': {},
+    },
+    'output_format': 'html5',
+}
+
 
 CURRENT_YEAR = datetime.date.today().year
 LICENSE_ROW = '''
